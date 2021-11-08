@@ -1,4 +1,5 @@
 const todos = [];//localStorage read
+todos.value=localStorage.getItem('todos');
 console.log(todos);
 const todosEl = document.getElementById('todos');
 render(createTodosElements(todos), todosEl);
@@ -11,7 +12,7 @@ todosEl.addEventListener('change', (e) => {
   const todo = todos.find((todo) => todo.id === todoId);
   todo.completed = todoCompleted;
   todo.updatedAt = Date.now();
- 
+
   render(createTodosElements(todos), todosEl);
 });
 
@@ -21,7 +22,6 @@ todosEl.addEventListener('click', (e) => {
     const todoId = Number(deleteBtn.dataset.id);
     const todoIdx = todos.findIndex((todo) => todo.id === todoId);
     todos.splice(todoIdx, 1);
-   
     render(createTodosElements(todos), todosEl);
   }
 });
@@ -32,7 +32,6 @@ addFormEl.addEventListener('submit', (e) => {
   const newTodo = new Todo(title);
   todos.push(newTodo);
   console.log(todos);
- 
   render(createTodosElements(todos), todosEl);
   e.target.reset();
 });
