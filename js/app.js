@@ -1,8 +1,7 @@
-const todos = [];//localStorage read
-todos.value=localStorage.getItem('todos');
+let todos = [];
 console.log(todos);
 const todosEl = document.getElementById('todos');
-render(createTodosElements(todos), todosEl);
+getTodos();
 
 const addFormEl = document.getElementById('addForm');
 
@@ -12,17 +11,14 @@ todosEl.addEventListener('change', (e) => {
   const todo = todos.find((todo) => todo.id === todoId);
   todo.completed = todoCompleted;
   todo.updatedAt = Date.now();
-
-  render(createTodosElements(todos), todosEl);
+  updateTodo(todo, todoId);
 });
 
 todosEl.addEventListener('click', (e) => {
   const deleteBtn = e.target.closest('.btn');
   if (deleteBtn) {
     const todoId = Number(deleteBtn.dataset.id);
-    const todoIdx = todos.findIndex((todo) => todo.id === todoId);
-    todos.splice(todoIdx, 1);
-    render(createTodosElements(todos), todosEl);
+    deleteTodo(todoId);
   }
 });
 
@@ -30,9 +26,7 @@ addFormEl.addEventListener('submit', (e) => {
   e.preventDefault();
   const title = e.target.title.value;
   const newTodo = new Todo(title);
-  todos.push(newTodo);
-  console.log(todos);
-  render(createTodosElements(todos), todosEl);
+  createTodo(newTodo);
   e.target.reset();
 });
 
@@ -57,7 +51,6 @@ function createTodoElement(todo) {
 }
 
 function Todo(title) {
-  this.id = Date.now();
   this.title = title;
   this.completed = false;
   this.createdAt = Date.now();
@@ -66,4 +59,79 @@ function Todo(title) {
 
 function render(htmlStr, htmlNode) {
   htmlNode.innerHTML = htmlStr;
+}
+
+async function getTodos() {
+  try {
+    const response = await fetch('//localhost:4040/todos');
+    if (response.ok) {
+      const data = await response.json();
+      todos = data;
+      render(createTodosElements(todos), todosEl);
+    } else {
+      throw new Error(`Request fail! ${response.status}`);
+    }
+  } catch (error) {
+    console.error(error);
+    // alert('Sorry :( Error, try again later!')
+  }
+}
+async function createTodo(newTodo) {
+  try {
+    const response = await fetch('//localhost:4040/todos', {
+      method: 'POST',
+      body: JSON.stringify(newTodo),
+      headers: {
+        'content-type': 'application/json;charset=utf-8',
+      },
+    });
+    if (response.ok) {
+      const data = await response.json();
+      todos.push(data);
+      render(createTodosElements(todos), todosEl);
+    } else {
+      throw new Error(`Request fail! ${response.status}`);
+    }
+  } catch (error) {
+    console.error(error);
+    // alert('Sorry :( Error, try again later!')
+  }
+}
+async function deleteTodo(todoId) {
+  try {
+    const response = await fetch(`//localhost:4040/todos/${todoId}`, {
+      method: 'DELETE',
+    });
+    if (response.ok) {
+      todos = todos.filter((todo) => todo.id !== todoId);
+      render(createTodosElements(todos), todosEl);
+    } else {
+      throw new Error(`Request fail! ${response.status}`);
+    }
+  } catch (error) {
+    console.error(error);
+    // alert('Sorry :( Error, try again later!')
+  }
+}
+async function updateTodo(updateTodoData, todoId) {
+  try {
+    const response = await fetch(`//localhost:4040/todos/${todoId}`, {
+      method: 'PATCH',
+      body: JSON.stringify(updateTodoData),
+      headers: {
+        'content-type': 'application/json;charset=utf-8',
+      },
+    });
+    if (response.ok) {
+      const data = await response.json();
+      let oldTodo = todos.find((todo) => todo.id === todoId);
+      oldTodo = { ...oldTodo, ...data };
+      render(createTodosElements(todos), todosEl);
+    } else {
+      throw new Error(`Request fail! ${response.status}`);
+    }
+  } catch (error) {
+    console.error(error);
+    // alert('Sorry :( Error, try again later!')
+  }
 }
